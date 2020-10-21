@@ -1,2 +1,2 @@
-# fd
+# lua
 lua - Library Usage Analyser
