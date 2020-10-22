@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "./lua;lua";
+
+service Analyzer {
+    rpc Analyze(AnalyzeRequest) returns (AnalyzeResponse);
+}
+
+message AnalyzeRequest {
+    string projectID = 1;
+    string commitHash = 2;
+    repeated Library libraries = 3;
+}
+
+message Library {
+    string name = 1;
+    repeated string classes = 2;
+}
+
+message AnalyzeResponse {
+}

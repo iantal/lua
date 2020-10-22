@@ -1,0 +1,28 @@
+version: '3.8'
+
+services: 
+    lua:
+        container_name: lua
+        build:
+            context: ../
+            args: 
+                - GITHUB_TOKEN
+            dockerfile: docker/Dockerfile
+        env_file: 
+            - database.env
+        environment: 
+            POSTGRES_HOST: pgdb
+            POSTGRES_PORT: 5432
+            BASE_PATH: "/opt/data"
+            RM_HOST: "rm:8005"
+            LD_HOST: "ld:8003"
+        volumes:
+            - ../repos:/opt/data
+        ports: 
+            - 8008:8008
+        command: ["./wait-for-it.sh", "pgdb:5432", "--", "./main"]
+
+networks:
+    default:
+        external:
+            name: proxynet
