@@ -6,23 +6,28 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/go-hclog"
+	ldprotos "github.com/iantal/ld/protos/ld"
 	"github.com/iantal/lua/internal/files"
 	"github.com/iantal/lua/internal/repository"
 	protos "github.com/iantal/lua/protos/lua"
+
 	"github.com/jinzhu/gorm"
 )
 
 type Analyzer struct {
-	log    hclog.Logger
-	store  *files.Local
-	db     *repository.FileDB
-	rmHost string
-	ldHost string
+	log            hclog.Logger
+	store          *files.Local
+	filesDB        *repository.FileDB
+	dependenciesDB *repository.DependenciesDB
+	rmHost         string
+	ld             ldprotos.UsedLanguagesClient
 }
 
-func NewAnalyzer(log hclog.Logger, stor *files.Local, db *gorm.DB, rmHost, ldHost string) *Analyzer {
-	dbs := repository.NewFileDB(log, db)
-	return &Analyzer{log, stor, dbs, rmHost, ldHost}
+func NewAnalyzer(log hclog.Logger, stor *files.Local, db *gorm.DB, rmHost string, ld ldprotos.UsedLanguagesClient) *Analyzer {
+	filesDB := repository.NewFileDB(log, db)
+	depsDB := repository.NewDependenciesDB(log, db)
+
+	return &Analyzer{log, stor, filesDB, depsDB, rmHost, ld}
 }
 
 func (a *Analyzer) Analyze(projectID, commit string, libraries []*protos.Library) error {
@@ -46,5 +51,20 @@ func (a *Analyzer) Analyze(projectID, commit string, libraries []*protos.Library
 		}
 	}
 
+	a.execPipeline(projectID, commit, libraries)
+
 	return nil
+}
+
+func (a *Analyzer) execPipeline(projectID, commit string, libraries []*protos.Library) {
+
+	r := a.matchUsedLibraries(
+		a.extractDeclarations(
+			a.getFilesByLanguage(projectID, commit, libraries)))
+
+	a.log.Info("Persisting data", "project", projectID, "commit", commit)
+	for res := range r {
+		a.filesDB.AddFile(res)
+	}
+
 }

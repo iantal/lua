@@ -25,7 +25,6 @@ func NewFileDB(log hclog.Logger, db *gorm.DB) *FileDB {
 // AddFile adds a library to the db
 func (l *FileDB) AddFile(file *domain.File) {
 	l.db.Create(&file)
-	return
 }
 
 // GetFilesByIDAndCommit returns all files for the given id and commit

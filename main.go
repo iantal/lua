@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
+	ldprotos "github.com/iantal/ld/protos/ld"
+	"github.com/iantal/lua/internal/domain"
 	"github.com/iantal/lua/internal/files"
 	"github.com/iantal/lua/internal/server"
 	protos "github.com/iantal/lua/protos/lua"
@@ -15,6 +18,20 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
+
+func gRPCConnection(host string) *grpc.ClientConn {
+	conn, err := grpc.Dial(
+		host,
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1000*3000)),
+		grpc.WithInsecure(),
+		grpc.WithBlock(),
+		grpc.WithTimeout(60*time.Second),
+	)
+	if err != nil {
+		panic(err)
+	}
+	return conn
+}
 
 func main() {
 	viper.AutomaticEnv()
@@ -40,7 +57,8 @@ func main() {
 	port := viper.Get("POSTGRES_PORT")
 	connection := fmt.Sprintf("host=%v port=%v user=%v dbname=%v password=%v sslmode=disable", host, port, user, database, password)
 
-	db, err := gorm.Open("postgres", connection)
+	var db *gorm.DB
+	db, err = gorm.Open("postgres", connection)
 	defer db.Close()
 	if err != nil {
 		fmt.Println(err)
@@ -52,8 +70,15 @@ func main() {
 		panic("Ping failed!")
 	}
 
+	db.AutoMigrate(&domain.Dependency{}, &domain.File{})
+
+	// setup GRPC for LD
+	connLD := gRPCConnection(ld)
+	defer connLD.Close()
+	ldcli := ldprotos.NewUsedLanguagesClient(connLD)
+
 	// c := server.NewMCDownloader(log, stor, db)
-	c := server.NewLibraryUsageAnalyser(log, stor, db, rm, ld)
+	c := server.NewLibraryUsageAnalyser(log, stor, db, rm, ldcli)
 
 	// register the currency server
 	protos.RegisterAnalyzerServer(gs, c)
