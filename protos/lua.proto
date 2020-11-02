@@ -9,10 +9,10 @@ service Analyzer {
 message AnalyzeRequest {
     string projectID = 1;
     string commitHash = 2;
-    repeated Library libraries = 3;
+    repeated LuaLibrary libraries = 3;
 }
 
-message Library {
+message LuaLibrary {
     string name = 1;
     repeated string classes = 2;
 }

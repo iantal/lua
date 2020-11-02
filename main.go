@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	ldprotos "github.com/iantal/ld/protos/ld"
+	mcdprotos "github.com/iantal/mcd/protos/mcd"
 	"github.com/iantal/lua/internal/domain"
 	"github.com/iantal/lua/internal/files"
 	"github.com/iantal/lua/internal/server"
@@ -43,6 +44,7 @@ func main() {
 	bp := fmt.Sprintf("%v", viper.Get("BASE_PATH"))
 	rm := fmt.Sprintf("%v", viper.Get("RM_HOST"))
 	ld := fmt.Sprintf("%v", viper.Get("LD_HOST"))
+	mcd := fmt.Sprintf("%v", viper.Get("MCD_HOST"))
 
 	stor, err := files.NewLocal(bp, 1024*1000*1000*5)
 	if err != nil {
@@ -77,8 +79,13 @@ func main() {
 	defer connLD.Close()
 	ldcli := ldprotos.NewUsedLanguagesClient(connLD)
 
+	// setup GRPC for MCD
+	connMCD := gRPCConnection(mcd)
+	defer connMCD.Close()
+	mcdcli := mcdprotos.NewDownloaderClient(connMCD)
+
 	// c := server.NewMCDownloader(log, stor, db)
-	c := server.NewLibraryUsageAnalyser(log, stor, db, rm, ldcli)
+	c := server.NewLibraryUsageAnalyser(log, stor, db, rm, ldcli, mcdcli)
 
 	// register the currency server
 	protos.RegisterAnalyzerServer(gs, c)

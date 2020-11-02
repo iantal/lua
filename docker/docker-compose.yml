@@ -16,6 +16,7 @@ services:
             BASE_PATH: "/opt/data"
             RM_HOST: "rm:8005"
             LD_HOST: "ld:8003"
+            MCD_HOST: "mcd:8007"
         volumes:
             - ../repos:/opt/data
         ports: 

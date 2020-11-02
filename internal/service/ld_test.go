@@ -9,6 +9,8 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/hashicorp/go-hclog"
 	ldprotos "github.com/iantal/ld/protos/ld"
+	mcdprotos "github.com/iantal/mcd/protos/mcd"
+
 	"github.com/iantal/lua/protos/lua"
 	"github.com/jinzhu/gorm"
 	"google.golang.org/grpc"
@@ -86,12 +88,19 @@ func TestFilterJavaFiles(t *testing.T) {
 	defer conn.Close()
 	ldcli := ldprotos.NewUsedLanguagesClient(conn)
 
+	conn2, err := grpc.DialContext(ctx, "", grpc.WithInsecure())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	mcdcli := mcdprotos.NewDownloaderClient(conn2)
+
 	db, _, _ := sqlmock.New()           // mock sql.DB
 	gdb, _ := gorm.Open("postgres", db) // open gorm db
 
-	a := NewAnalyzer(hclog.Default(), nil, gdb, "", ldcli)
+	a := NewAnalyzer(hclog.Default(), nil, gdb, "", ldcli, mcdcli)
 
-	r := a.getFilesByLanguage("282119ba-7f0a-478f-9d94-bb59dfbaefa7", "a", []*lua.Library{})
+	r := a.getFilesByLanguage("282119ba-7f0a-478f-9d94-bb59dfbaefa7", "a", []*lua.LuaLibrary{})
 
 	expected := []string{
 		"clients/src/main/java/org/apache/kafka/clients/ApiVersion.java",
@@ -122,12 +131,19 @@ func TestLDError(t *testing.T) {
 	defer conn.Close()
 	ldcli := ldprotos.NewUsedLanguagesClient(conn)
 
+	conn2, err := grpc.DialContext(ctx, "", grpc.WithInsecure())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	mcdcli := mcdprotos.NewDownloaderClient(conn2)
+
 	db, _, _ := sqlmock.New()           // mock sql.DB
 	gdb, _ := gorm.Open("postgres", db) // open gorm db
 
-	a := NewAnalyzer(hclog.Default(), nil, gdb, "", ldcli)
+	a := NewAnalyzer(hclog.Default(), nil, gdb, "", ldcli, mcdcli)
 
-	r := a.getFilesByLanguage("282119ba-7f0a-478f-9d94-bb59dfbaefa7", "b", []*lua.Library{})
+	r := a.getFilesByLanguage("282119ba-7f0a-478f-9d94-bb59dfbaefa7", "b", []*lua.LuaLibrary{})
 
 	expected := []string{}
 

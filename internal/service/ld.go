@@ -12,10 +12,10 @@ import (
 
 type javaPipelineData struct {
 	File      *domain.File
-	Libraries []*protos.Library
+	Libraries []*protos.LuaLibrary
 }
 
-func (a *Analyzer) getFilesByLanguage(projectID, commit string, libraries []*protos.Library) <-chan javaPipelineData {
+func (a *Analyzer) getFilesByLanguage(projectID, commit string, libraries []*protos.LuaLibrary) <-chan javaPipelineData {
 	a.log.Info("Requesting ld for languages and files", "project", projectID, "commit", commit)
 	c := make(chan javaPipelineData)
 
@@ -44,7 +44,7 @@ func (a *Analyzer) getFilesByLanguage(projectID, commit string, libraries []*pro
 
 }
 
-func filterLanguage(projectID, commit, language string, libraries []*protos.Library, files []string, output chan<- javaPipelineData, wg *sync.WaitGroup) {
+func filterLanguage(projectID, commit, language string, libraries []*protos.LuaLibrary, files []string, output chan<- javaPipelineData, wg *sync.WaitGroup) {
 	if language == "Java" {
 		for _, file := range files {
 			f := &domain.File{

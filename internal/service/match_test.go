@@ -18,8 +18,8 @@ func TestMatching(t *testing.T) {
 		"org.import25",
 	}
 
-	libraries := []*lua.Library{
-		&lua.Library{
+	libraries := []*lua.LuaLibrary{
+		&lua.LuaLibrary{
 			Name: "lib1",
 			Classes: []string{
 				"org.import2",
@@ -27,14 +27,14 @@ func TestMatching(t *testing.T) {
 				"class_y",
 			},
 		},
-		&lua.Library{
+		&lua.LuaLibrary{
 			Name: "lib2",
 			Classes: []string{
 				"org.import1",
 				"class_a",
 			},
 		},
-		&lua.Library{
+		&lua.LuaLibrary{
 			Name: "lib3",
 			Classes: []string{
 				"class_m",
@@ -42,7 +42,7 @@ func TestMatching(t *testing.T) {
 				"org.import7",
 			},
 		},
-		&lua.Library{
+		&lua.LuaLibrary{
 			Name: "lib4",
 			Classes: []string{
 				"org.import3",

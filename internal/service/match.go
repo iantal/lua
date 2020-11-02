@@ -33,7 +33,7 @@ func (a *Analyzer) matchFile(in javaPipelineData, output chan<- *domain.File, wg
 	wg.Done()
 }
 
-func match(declarations []string, libraries []*lua.Library) []domain.Dependency {
+func match(declarations []string, libraries []*lua.LuaLibrary) []domain.Dependency {
 	usages := []domain.Dependency{}
 
 	for _, l := range libraries {

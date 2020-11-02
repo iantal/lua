@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-hclog"
+	ldprotos "github.com/iantal/ld/protos/ld"
 	"github.com/iantal/lua/internal/files"
 	"github.com/iantal/lua/internal/service"
 	protos "github.com/iantal/lua/protos/lua"
-	ldprotos "github.com/iantal/ld/protos/ld"
+	mcdprotos "github.com/iantal/mcd/protos/mcd"
 
 	"github.com/jinzhu/gorm"
 )
@@ -17,8 +18,8 @@ type LibraryUsageAnalyser struct {
 	as  *service.Analyzer
 }
 
-func NewLibraryUsageAnalyser(l hclog.Logger, stor *files.Local, db *gorm.DB, rmHost string, ld ldprotos.UsedLanguagesClient) *LibraryUsageAnalyser {
-	return &LibraryUsageAnalyser{l, service.NewAnalyzer(l, stor, db, rmHost, ld)}
+func NewLibraryUsageAnalyser(l hclog.Logger, stor *files.Local, db *gorm.DB, rmHost string, ld ldprotos.UsedLanguagesClient, mcd mcdprotos.DownloaderClient) *LibraryUsageAnalyser {
+	return &LibraryUsageAnalyser{l, service.NewAnalyzer(l, stor, db, rmHost, ld, mcd)}
 }
 
 func (l *LibraryUsageAnalyser) Analyze(ctx context.Context, rr *protos.AnalyzeRequest) (*protos.AnalyzeResponse, error) {
