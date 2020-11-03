@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	ldprotos "github.com/iantal/ld/protos/ld"
-	mcdprotos "github.com/iantal/mcd/protos/mcd"
 
 	"github.com/iantal/lua/internal/files"
 	"github.com/iantal/lua/internal/repository"
@@ -23,14 +22,13 @@ type Analyzer struct {
 	dependenciesDB *repository.DependenciesDB
 	rmHost         string
 	ld             ldprotos.UsedLanguagesClient
-	mcd            mcdprotos.DownloaderClient
 }
 
-func NewAnalyzer(log hclog.Logger, stor *files.Local, db *gorm.DB, rmHost string, ld ldprotos.UsedLanguagesClient, mcd mcdprotos.DownloaderClient) *Analyzer {
+func NewAnalyzer(log hclog.Logger, stor *files.Local, db *gorm.DB, rmHost string, ld ldprotos.UsedLanguagesClient) *Analyzer {
 	filesDB := repository.NewFileDB(log, db)
 	depsDB := repository.NewDependenciesDB(log, db)
 
-	return &Analyzer{log, stor, filesDB, depsDB, rmHost, ld, mcd}
+	return &Analyzer{log, stor, filesDB, depsDB, rmHost, ld}
 }
 
 func (a *Analyzer) Analyze(projectID, commit string, libraries []*protos.LuaLibrary) error {
