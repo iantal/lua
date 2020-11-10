@@ -6,7 +6,7 @@ services:
         build:
             context: ../
             args: 
-                - GITHUB_TOKEN
+                - GT
             dockerfile: docker/Dockerfile
         env_file: 
             - database.env
