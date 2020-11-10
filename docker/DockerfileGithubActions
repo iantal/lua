@@ -1,0 +1,8 @@
+FROM golang:alpine as deploy
+COPY main .
+RUN apk update && apk add wget && apk add bash && apk add zip && apk add git
+RUN wget https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && chmod +x wait-for-it.sh
+ENV BASE_PATH="/opt/data"
+VOLUME [ "/opt/data" ]
+EXPOSE 8008
+CMD ["./main"]
