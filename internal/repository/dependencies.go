@@ -1,19 +1,19 @@
 package repository
 
 import (
-	"github.com/hashicorp/go-hclog"
 	"github.com/iantal/lua/internal/domain"
+	"github.com/iantal/lua/internal/util"
 	"github.com/jinzhu/gorm"
 )
 
 // DependenciesDB defines the CRUD operations for storing projects in the db
 type DependenciesDB struct {
-	log hclog.Logger
+	log *util.StandardLogger
 	db  *gorm.DB
 }
 
 // NewDependenciesDB returns a FileDB object for handling CRUD operations
-func NewDependenciesDB(log hclog.Logger, db *gorm.DB) *DependenciesDB {
+func NewDependenciesDB(log *util.StandardLogger, db *gorm.DB) *DependenciesDB {
 	db.AutoMigrate(&domain.File{})
 	return &DependenciesDB{
 		log: log,

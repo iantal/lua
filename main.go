@@ -6,12 +6,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
 	ldprotos "github.com/iantal/ld/protos/ld"
 	"github.com/iantal/lua/internal/domain"
 	"github.com/iantal/lua/internal/files"
 	"github.com/iantal/lua/internal/server"
+	"github.com/iantal/lua/internal/util"
 	protos "github.com/iantal/lua/protos/lua"
+	vaprotos "github.com/iantal/va/protos/va"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres
 	"github.com/spf13/viper"
@@ -35,7 +36,7 @@ func gRPCConnection(host string) *grpc.ClientConn {
 
 func main() {
 	viper.AutomaticEnv()
-	log := hclog.Default()
+	log := util.NewLogger()
 
 	// create a new gRPC server, use WithInsecure to allow http connections
 	gs := grpc.NewServer()
@@ -43,10 +44,11 @@ func main() {
 	bp := fmt.Sprintf("%v", viper.Get("BASE_PATH"))
 	rm := fmt.Sprintf("%v", viper.Get("RM_HOST"))
 	ld := fmt.Sprintf("%v", viper.Get("LD_HOST"))
+	va := fmt.Sprintf("%v", viper.Get("VA_HOST"))
 
 	stor, err := files.NewLocal(bp, 1024*1000*1000*5)
 	if err != nil {
-		log.Error("Unable to create storage", "error", err)
+		log.WithField("error", err).Error("Unable to create storage")
 		os.Exit(1)
 	}
 
@@ -61,13 +63,14 @@ func main() {
 	db, err = gorm.Open("postgres", connection)
 	defer db.Close()
 	if err != nil {
-		fmt.Println(err)
-		panic("Failed to connect to database!")
+		log.WithField("error", err).Error("Failed to connect to database")
+		os.Exit(1)
 	}
 
 	err = db.DB().Ping()
 	if err != nil {
-		panic("Ping failed!")
+		log.WithField("error", err).Error("Failed to ping database")
+		os.Exit(1)
 	}
 
 	db.AutoMigrate(&domain.Dependency{}, &domain.File{})
@@ -77,8 +80,12 @@ func main() {
 	defer connLD.Close()
 	ldcli := ldprotos.NewUsedLanguagesClient(connLD)
 
-	// c := server.NewMCDownloader(log, stor, db)
-	c := server.NewLibraryUsageAnalyser(log, stor, db, rm, ldcli)
+	// setup GRPC for VA
+	connVA := gRPCConnection(va)
+	defer connVA.Close()
+	vacli := vaprotos.NewVulnerabilityAnalyzerClient(connVA)
+
+	c := server.NewLibraryUsageAnalyser(log, stor, db, rm, ldcli, vacli)
 
 	// register the currency server
 	protos.RegisterAnalyzerServer(gs, c)
@@ -90,11 +97,11 @@ func main() {
 	// create a TCP socket for inbound server connections
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", 8008))
 	if err != nil {
-		log.Error("Unable to create listener", "error", err)
+		log.WithField("error", err).Error("Unable to create listener")
 		os.Exit(1)
 	}
 
-	log.Info("Starting server", "bind_address", l.Addr().String())
+	log.Info("Starting server bind_address ", l.Addr().String())
 	// listen for requests
 	gs.Serve(l)
 }

@@ -7,15 +7,17 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/sirupsen/logrus"
 )
 
-func (a *Analyzer) extractDeclarations(data <-chan javaPipelineData) <-chan javaPipelineData {
+func (a *Analyzer) extractDeclarations(data []javaPipelineData) <-chan javaPipelineData {
 	oc := make(chan javaPipelineData)
 
 	go func() {
 		wg := &sync.WaitGroup{}
 
-		for file := range data {
+		for _, file := range data {
 			wg.Add(1)
 			go a.parseFile(file, oc, wg)
 		}
@@ -33,7 +35,7 @@ func (a *Analyzer) parseFile(in javaPipelineData, output chan<- javaPipelineData
 	filePath := filepath.Join(file.ProjectID.String(), file.CommitHash, "unbundle", file.CommitHash, in.File.Name)
 	fullPath := a.store.FullPath(filePath)
 	in.File.Declarations = strings.Join(a.extractJavaImports(fullPath), ",")
-	
+
 	output <- in
 	wg.Done()
 }
@@ -60,7 +62,10 @@ func (a *Analyzer) extractJavaImports(fpath string) []string {
 	}
 
 	if err := scanner.Err(); err != nil {
-		a.log.Error("Cannot read file", "file", fpath, "error", err)
+		a.log.WithFields(logrus.Fields{
+			"file":  fpath,
+			"error": err,
+		}).Error("Cannot read file")
 		return []string{}
 	}
 

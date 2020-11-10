@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/hashicorp/go-hclog"
 	ldprotos "github.com/iantal/ld/protos/ld"
 
+	"github.com/iantal/lua/internal/util"
 	"github.com/iantal/lua/protos/lua"
 	"github.com/jinzhu/gorm"
 	"google.golang.org/grpc"
@@ -90,7 +90,7 @@ func TestFilterJavaFiles(t *testing.T) {
 	db, _, _ := sqlmock.New()           // mock sql.DB
 	gdb, _ := gorm.Open("postgres", db) // open gorm db
 
-	a := NewAnalyzer(hclog.Default(), nil, gdb, "", ldcli)
+	a := NewAnalyzer(util.NewLogger(), nil, gdb, "", ldcli, nil)
 
 	r := a.getFilesByLanguage("282119ba-7f0a-478f-9d94-bb59dfbaefa7", "a", []*lua.LuaLibrary{})
 
@@ -103,7 +103,7 @@ func TestFilterJavaFiles(t *testing.T) {
 	}
 
 	actual := []string{}
-	for res := range r {
+	for _, res := range r {
 		actual = append(actual, res.File.Name)
 	}
 
@@ -126,14 +126,14 @@ func TestLDError(t *testing.T) {
 	db, _, _ := sqlmock.New()           // mock sql.DB
 	gdb, _ := gorm.Open("postgres", db) // open gorm db
 
-	a := NewAnalyzer(hclog.Default(), nil, gdb, "", ldcli)
+	a := NewAnalyzer(util.NewLogger(), nil, gdb, "", ldcli, nil)
 
 	r := a.getFilesByLanguage("282119ba-7f0a-478f-9d94-bb59dfbaefa7", "b", []*lua.LuaLibrary{})
 
 	expected := []string{}
 
 	actual := []string{}
-	for res := range r {
+	for _, res := range r {
 		actual = append(actual, res.File.Name)
 	}
 

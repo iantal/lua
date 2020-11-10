@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/iantal/lua/internal/util"
 )
 
 func readLines(path string) ([]string, error) {
@@ -54,7 +54,7 @@ func TestShouldReturnExtractedImports(t *testing.T) {
 
 func TestInexistingFile(t *testing.T) {
 	a := &Analyzer{
-		log: hclog.Default(),
+		log: util.NewLogger(),
 	}
 
 	in := "a.in"

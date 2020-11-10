@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+
+	"github.com/sirupsen/logrus"
 )
 
 func (a *Analyzer) downloadRepository(projectID, commit string) error {
@@ -17,7 +19,11 @@ func (a *Analyzer) downloadRepository(projectID, commit string) error {
 		return fmt.Errorf("Expected error code 200 got %d", resp.StatusCode)
 	}
 
-	a.log.Info("Content-Dispozition", "file", resp.Header.Get("Content-Disposition"))
+	a.log.WithFields(logrus.Fields{
+		"projectID": projectID,
+		"commit":    commit,
+		"file":      resp.Header.Get("Content-Disposition"),
+	}).Info("Content-Dispozition")
 
 	a.save(projectID, commit, resp.Body)
 	resp.Body.Close()
@@ -25,17 +31,21 @@ func (a *Analyzer) downloadRepository(projectID, commit string) error {
 	return nil
 }
 
-func (a *Analyzer) save(projectID, commit string, r io.ReadCloser) error {
-	a.log.Info("Save project - storage", "projectID", projectID)
+func (a *Analyzer) save(projectID, commit string, r io.ReadCloser) {
+	a.log.WithFields(logrus.Fields{
+		"projectID": projectID,
+		"commit":    commit,
+	}).Info("Save project to storage")
 
 	bp := commit + ".bundle"
 	fp := filepath.Join(projectID, commit, "bundle", bp)
 	err := a.store.Save(fp, r)
 
 	if err != nil {
-		a.log.Error("Unable to save file", "error", err)
-		return fmt.Errorf("Unable to save file %s", err)
+		a.log.WithFields(logrus.Fields{
+			"projectID": projectID,
+			"commit":    commit,
+			"error":     err,
+		}).Error("Unable to save file")
 	}
-
-	return nil
 }
