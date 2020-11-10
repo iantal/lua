@@ -23,6 +23,7 @@ jobs:
 
     - name: Get dependencies
       run: |
+        git config --global url."https://golang:${{ secrets.GT }}@github.com".insteadOf "https://github.com"
         go get -v -t -d ./...
         if [ -f Gopkg.toml ]; then
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
@@ -31,5 +32,4 @@ jobs:
 
     - name: Build
       run: |
-        git config --global url."https://golang:${GT}@github.com".insteadOf "https://github.com"
         go build -o main
