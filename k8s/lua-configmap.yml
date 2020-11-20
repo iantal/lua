@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lua-config
+  labels:
+    app: lua
+data:
+  postgres_user: postgres
+  postgres_port: "5432"
+  postgres_db: lua_db
+  postgres_host: pgdb-postgresql
