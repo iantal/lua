@@ -41,7 +41,7 @@ func main() {
 	// create a new gRPC server, use WithInsecure to allow http connections
 	gs := grpc.NewServer()
 
-	bp := fmt.Sprintf("%v", viper.Get("BASE_PATH"))
+	bp := "/opt/data"
 	rm := fmt.Sprintf("%v", viper.Get("RM_HOST"))
 	ld := fmt.Sprintf("%v", viper.Get("LD_HOST"))
 	va := fmt.Sprintf("%v", viper.Get("VA_HOST"))
