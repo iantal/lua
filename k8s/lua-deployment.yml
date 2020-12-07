@@ -18,14 +18,18 @@ spec:
         - name: dockerregistrykey
       containers:
         - name: lua
-          image: micky0000/seclens:v1.0.5-lua
+          image: micky0000/seclens:v1.0.4-lua
           imagePullPolicy: "Always"
           ports:
             - containerPort: 8008
           env:
-            - name: LUA_HOST
-              value: "lua-service:8008"
-            
+            - name: RM_HOST
+              value: "rm-service:8005"
+            - name: LD_HOST
+              value: "ld-service:8003"
+            - name: VA_HOST
+              value: "va-service:8009"
+
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
