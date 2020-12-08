@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 
@@ -100,7 +101,22 @@ func (a *Analyzer) execPipeline(projectID, commit string, libraries []*protos.Lu
 				"projectName":  res.Name,
 				"dependencies": res.Dependencies,
 			}).Info("File has dependencies")
-			// TODO: send to VA
+
+			dependencyNames := []string{}
+			for _, d := range res.Dependencies {
+				dependencyNames = append(dependencyNames, d.Name)
+			}
+
+			vaReq := &vaprotos.VulnerabilityAnalyzeRequest{
+				ProjectID:  projectID,
+				CommitHash: commit,
+				Libraries:  dependencyNames,
+			}
+
+			_, err := a.va.Analyze(context.Background(), vaReq)
+			if err != nil {
+				a.log.WithField("error", err).Error("Failed to send request to VA")
+			}
 		}
 	}
 
