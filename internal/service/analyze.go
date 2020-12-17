@@ -17,6 +17,10 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+type void struct{}
+
+var member void
+
 type Analyzer struct {
 	log            *util.StandardLogger
 	store          *files.Local
@@ -91,33 +95,34 @@ func (a *Analyzer) execPipeline(projectID, commit string, libraries []*protos.Lu
 		"projectID": projectID,
 		"commit":    commit,
 	}).Info("Persisting data")
+
+	dependencyNames := []string{}
+	dependencySet := make(map[string]void)
+
 	for res := range r {
 		a.filesDB.AddFile(res)
-
-		if len(res.Dependencies) > 0 {
-			a.log.WithFields(logrus.Fields{
-				"projectID":    projectID,
-				"commit":       commit,
-				"projectName":  res.Name,
-				"dependencies": res.Dependencies,
-			}).Info("File has dependencies")
-
-			dependencyNames := []string{}
-			for _, d := range res.Dependencies {
+		for _, d := range res.Dependencies {
+			if _, exists := dependencySet[d.Name]; !exists {
+				dependencySet[d.Name] = member
 				dependencyNames = append(dependencyNames, d.Name)
-			}
-
-			vaReq := &vaprotos.VulnerabilityAnalyzeRequest{
-				ProjectID:  projectID,
-				CommitHash: commit,
-				Libraries:  dependencyNames,
-			}
-
-			_, err := a.va.Analyze(context.Background(), vaReq)
-			if err != nil {
-				a.log.WithField("error", err).Error("Failed to send request to VA")
 			}
 		}
 	}
 
+	a.log.WithFields(logrus.Fields{
+		"projectId": projectID,
+		"commit": commit,
+		"totalLibs": len(dependencyNames),
+	}).Info("Number of dependencies that will be analyzed")
+
+	vaReq := &vaprotos.VulnerabilityAnalyzeRequest{
+		ProjectID:  projectID,
+		CommitHash: commit,
+		Libraries:  dependencyNames,
+	}
+
+	_, err := a.va.Analyze(context.Background(), vaReq)
+	if err != nil {
+		a.log.WithField("error", err).Error("Failed to send request to VA")
+	}
 }
