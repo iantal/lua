@@ -25,7 +25,6 @@ type Analyzer struct {
 	log            *util.StandardLogger
 	store          *files.Local
 	filesDB        *repository.FileDB
-	dependenciesDB *repository.DependenciesDB
 	rmHost         string
 	ld             ldprotos.UsedLanguagesClient
 	va             vaprotos.VulnerabilityAnalyzerClient
@@ -33,9 +32,7 @@ type Analyzer struct {
 
 func NewAnalyzer(log *util.StandardLogger, stor *files.Local, db *gorm.DB, rmHost string, ld ldprotos.UsedLanguagesClient, va vaprotos.VulnerabilityAnalyzerClient) *Analyzer {
 	filesDB := repository.NewFileDB(log, db)
-	depsDB := repository.NewDependenciesDB(log, db)
-
-	return &Analyzer{log, stor, filesDB, depsDB, rmHost, ld, va}
+	return &Analyzer{log, stor, filesDB, rmHost, ld, va}
 }
 
 func (a *Analyzer) Analyze(projectID, commit string, libraries []*protos.LuaLibrary) {

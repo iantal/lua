@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option go_package = "./luaresult;luaresult";
+
+service ResultProvider {
+    rpc ProvideVulnerableLibrariesData(ResultRequest) returns (ResultResponse);
+}
+
+message ResultRequest {
+    string projectID = 1;
+    string commitHash = 2;
+    repeated string libraries = 3;
+}
+
+message ResultResponse {
+    repeated VulnerableLibrary vulnerableLibraries = 1;
+}
+
+
+message VulnerableLibrary {
+    string projectID = 1;
+    string commitHash = 2;
+    string name = 3;
+    repeated string affectedProjectFiles = 4;
+}

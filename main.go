@@ -12,6 +12,7 @@ import (
 	"github.com/iantal/lua/internal/server"
 	"github.com/iantal/lua/internal/util"
 	protos "github.com/iantal/lua/protos/lua"
+	luaresult "github.com/iantal/lua/protos/luaresult"
 	vaprotos "github.com/iantal/va/protos/va"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres
@@ -86,10 +87,11 @@ func main() {
 	vacli := vaprotos.NewVulnerabilityAnalyzerClient(connVA)
 
 	c := server.NewLibraryUsageAnalyser(log, stor, db, rm, ldcli, vacli)
+	rp := server.NewResultProvider(log, db)
 
-	// register the currency server
 	protos.RegisterAnalyzerServer(gs, c)
-
+	luaresult.RegisterResultProviderServer(gs, rp)
+	
 	// register the reflection service which allows clients to determine the methods
 	// for this gRPC service
 	reflection.Register(gs)
