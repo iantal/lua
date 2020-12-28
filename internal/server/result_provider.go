@@ -46,7 +46,6 @@ func (r *ResultProvider) ProvideVulnerableLibrariesData(ctx context.Context, rr 
 func (r *ResultProvider) mapLibrary(projectID, commit, lib string, files []*domain.File) *protos.VulnerableLibrary {
 
 	affectedFiles := r.filesDB.GetAffectedProjectFiles(projectID, commit, lib)
-	r.log.Info(affectedFiles)
 	vl := &protos.VulnerableLibrary{
 		ProjectID:            projectID,
 		CommitHash:           commit,
@@ -55,20 +54,4 @@ func (r *ResultProvider) mapLibrary(projectID, commit, lib string, files []*doma
 	}
 
 	return vl
-}
-
-func filterAffectedFiles(lib string, files []*domain.File) []string {
-	affectedFiles := []string{}
-
-	for _, file := range files {
-		for _, dep := range file.Dependencies {
-			if dep.Name == lib {
-				affectedFiles = append(affectedFiles, file.Name)
-				break
-			}
-		}
-	}
-
-	return affectedFiles
-
 }
