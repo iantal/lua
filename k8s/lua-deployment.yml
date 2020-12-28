@@ -18,7 +18,7 @@ spec:
         - name: dockerregistrykey
       containers:
         - name: lua
-          image: micky0000/seclens:v1.0.8-lua
+          image: micky0000/seclens:v1.0.10-lua
           imagePullPolicy: "Always"
           ports:
             - containerPort: 8008

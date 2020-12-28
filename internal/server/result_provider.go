@@ -45,7 +45,7 @@ func (r *ResultProvider) ProvideVulnerableLibrariesData(ctx context.Context, rr 
 
 func (r *ResultProvider) mapLibrary(projectID, commit, lib string, files []*domain.File) *protos.VulnerableLibrary {
 
-	affectedFiles := filterAffectedFiles(lib, files)
+	affectedFiles := r.filesDB.GetAffectedProjectFiles(projectID, commit, lib)
 	r.log.Info(affectedFiles)
 	vl := &protos.VulnerableLibrary{
 		ProjectID:            projectID,
