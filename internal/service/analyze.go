@@ -1,7 +1,9 @@
 package service
 
 import (
-	"context"
+	"bytes"
+	"encoding/json"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -9,6 +11,7 @@ import (
 	vaprotos "github.com/iantal/va/protos/va"
 	"github.com/sirupsen/logrus"
 
+	"github.com/iantal/lua/internal/domain"
 	"github.com/iantal/lua/internal/files"
 	"github.com/iantal/lua/internal/repository"
 	"github.com/iantal/lua/internal/util"
@@ -22,12 +25,12 @@ type void struct{}
 var member void
 
 type Analyzer struct {
-	log            *util.StandardLogger
-	store          *files.Local
-	filesDB        *repository.FileDB
-	rmHost         string
-	ld             ldprotos.UsedLanguagesClient
-	va             vaprotos.VulnerabilityAnalyzerClient
+	log     *util.StandardLogger
+	store   *files.Local
+	filesDB *repository.FileDB
+	rmHost  string
+	ld      ldprotos.UsedLanguagesClient
+	va      vaprotos.VulnerabilityAnalyzerClient
 }
 
 func NewAnalyzer(log *util.StandardLogger, stor *files.Local, db *gorm.DB, rmHost string, ld ldprotos.UsedLanguagesClient, va vaprotos.VulnerabilityAnalyzerClient) *Analyzer {
@@ -108,18 +111,39 @@ func (a *Analyzer) execPipeline(projectID, commit string, libraries []*protos.Lu
 
 	a.log.WithFields(logrus.Fields{
 		"projectId": projectID,
-		"commit": commit,
+		"commit":    commit,
 		"totalLibs": len(dependencyNames),
 	}).Info("Number of dependencies that will be analyzed")
 
-	vaReq := &vaprotos.VulnerabilityAnalyzeRequest{
+	scan := &domain.Scan{
 		ProjectID:  projectID,
 		CommitHash: commit,
 		Libraries:  dependencyNames,
 	}
 
-	_, err := a.va.Analyze(context.Background(), vaReq)
+	a.startScan(scan)
+}
+
+func (a *Analyzer) startScan(scan *domain.Scan) {
+	jsonData, err := json.Marshal(scan)
 	if err != nil {
-		a.log.WithField("error", err).Error("Failed to send request to VA")
+		a.log.WithFields(logrus.Fields{
+			"projectID": scan.ProjectID,
+			"commit":    scan.CommitHash,
+			"err":       err,
+		}).Error("Error marshaling vulnerable libraries")
+		return
 	}
+
+	resp, err := http.Post("http://odc-service:8009/api/v1/scans", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		a.log.WithFields(logrus.Fields{
+			"projectID": scan.ProjectID,
+			"commit":    scan.CommitHash,
+			"err":       err,
+		}).Error("Error sending request to odc")
+		return
+	}
+
+	defer resp.Body.Close()
 }
