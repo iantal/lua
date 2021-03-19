@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	ldprotos "github.com/iantal/ld/protos/ld"
-	vaprotos "github.com/iantal/va/protos/va"
 	"github.com/sirupsen/logrus"
 
 	"github.com/iantal/lua/internal/domain"
@@ -30,12 +29,11 @@ type Analyzer struct {
 	filesDB *repository.FileDB
 	rmHost  string
 	ld      ldprotos.UsedLanguagesClient
-	va      vaprotos.VulnerabilityAnalyzerClient
 }
 
-func NewAnalyzer(log *util.StandardLogger, stor *files.Local, db *gorm.DB, rmHost string, ld ldprotos.UsedLanguagesClient, va vaprotos.VulnerabilityAnalyzerClient) *Analyzer {
+func NewAnalyzer(log *util.StandardLogger, stor *files.Local, db *gorm.DB, rmHost string, ld ldprotos.UsedLanguagesClient) *Analyzer {
 	filesDB := repository.NewFileDB(log, db)
-	return &Analyzer{log, stor, filesDB, rmHost, ld, va}
+	return &Analyzer{log, stor, filesDB, rmHost, ld}
 }
 
 func (a *Analyzer) Analyze(projectID, commit string, libraries []*protos.LuaLibrary) {

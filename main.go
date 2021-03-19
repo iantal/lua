@@ -13,7 +13,6 @@ import (
 	"github.com/iantal/lua/internal/util"
 	protos "github.com/iantal/lua/protos/lua"
 	luaresult "github.com/iantal/lua/protos/luaresult"
-	vaprotos "github.com/iantal/va/protos/va"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres
 	"github.com/spf13/viper"
@@ -45,7 +44,6 @@ func main() {
 	bp := "/opt/data"
 	rm := fmt.Sprintf("%v", viper.Get("RM_HOST"))
 	ld := fmt.Sprintf("%v", viper.Get("LD_HOST"))
-	va := fmt.Sprintf("%v", viper.Get("VA_HOST"))
 
 	stor, err := files.NewLocal(bp, 1024*1000*1000*5)
 	if err != nil {
@@ -81,17 +79,12 @@ func main() {
 	defer connLD.Close()
 	ldcli := ldprotos.NewUsedLanguagesClient(connLD)
 
-	// setup GRPC for VA
-	connVA := gRPCConnection(va)
-	defer connVA.Close()
-	vacli := vaprotos.NewVulnerabilityAnalyzerClient(connVA)
-
-	c := server.NewLibraryUsageAnalyser(log, stor, db, rm, ldcli, vacli)
+	c := server.NewLibraryUsageAnalyser(log, stor, db, rm, ldcli)
 	rp := server.NewResultProvider(log, db)
 
 	protos.RegisterAnalyzerServer(gs, c)
 	luaresult.RegisterResultProviderServer(gs, rp)
-	
+
 	// register the reflection service which allows clients to determine the methods
 	// for this gRPC service
 	reflection.Register(gs)

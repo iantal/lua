@@ -90,7 +90,7 @@ func TestFilterJavaFiles(t *testing.T) {
 	db, _, _ := sqlmock.New()           // mock sql.DB
 	gdb, _ := gorm.Open("postgres", db) // open gorm db
 
-	a := NewAnalyzer(util.NewLogger(), nil, gdb, "", ldcli, nil)
+	a := NewAnalyzer(util.NewLogger(), nil, gdb, "", ldcli)
 
 	r := a.getFilesByLanguage("282119ba-7f0a-478f-9d94-bb59dfbaefa7", "a", []*lua.LuaLibrary{})
 
@@ -126,7 +126,7 @@ func TestLDError(t *testing.T) {
 	db, _, _ := sqlmock.New()           // mock sql.DB
 	gdb, _ := gorm.Open("postgres", db) // open gorm db
 
-	a := NewAnalyzer(util.NewLogger(), nil, gdb, "", ldcli, nil)
+	a := NewAnalyzer(util.NewLogger(), nil, gdb, "", ldcli)
 
 	r := a.getFilesByLanguage("282119ba-7f0a-478f-9d94-bb59dfbaefa7", "b", []*lua.LuaLibrary{})
 
