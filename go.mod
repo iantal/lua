@@ -7,7 +7,6 @@ require (
 	github.com/golang/protobuf v1.4.2
 	github.com/google/uuid v1.1.2
 	github.com/iantal/ld v1.0.1-ld
-	github.com/iantal/va v0.0.0-20201103225147-6a41e854207c
 	github.com/jinzhu/gorm v1.9.16
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/viper v1.7.1
